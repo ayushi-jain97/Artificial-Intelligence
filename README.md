@@ -9,6 +9,11 @@
 * It consists of a straightforward implementation of Gradient Descent and its modification to support Binary Classification problems
 * Familiarize yourself with Sigmoid/ Logistic function and its properties
 * Change the number of iterations and learning rate to observe convergence
+_Run from terminal_
+```python
+python gradientDescent.py
+python logisticRegression.py
+```
 
 ##Logic
 ####Propositional Logic
