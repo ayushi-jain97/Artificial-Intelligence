@@ -1,11 +1,12 @@
 #Programmer-Ayushi Jain
 
 #--vocabulary in decreasing order of precedence--
-#!--not
-#^--and
-#v--or
-#~--biconditional
-#>--conditional	
+# !--not
+# ^--and
+# v--or
+# >--conditional	
+# ~--biconditional
+
 
 
 sent={}
