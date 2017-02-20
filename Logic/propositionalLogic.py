@@ -1,9 +1,21 @@
+#Programmer-Ayushi Jain
+
+#--vocabulary in decreasing order of precedence--
+#!--not
+#^--and
+#v--or
+#~--biconditional
+#>--conditional	
+
+
 sent={}
+dict_sent={}
+
 
 def postfix(s):
 	stack=[]
 	post=[]
-	prior={'!':3,'^':2,'v':1,'(':0}
+	prior={'!':3,'^':2,'v':1,'>':0,'~':-1,'(':-2}
 	
 	l=len(s)
 	for i in range(l):
@@ -11,7 +23,7 @@ def postfix(s):
 			post.append(s[i])
 		elif s[i]=='(':
 			stack.append('(')
-		elif s[i]=='v' or s[i]=='!' or s[i]=='^':
+		elif s[i]=='v' or s[i]=='!' or s[i]=='^' or s[i]=='>' or s[i]=='~':
 			while(len(stack) and prior[stack[-1]]>prior[s[i]]):
 				post.append(stack.pop())
 			stack.append(s[i])
@@ -21,7 +33,6 @@ def postfix(s):
 			stack.pop()
 	while len(stack):
 		post.append(stack.pop())
-
 	return post
 
 def evaluate(post):
@@ -37,6 +48,14 @@ def evaluate(post):
 			a=stack.pop()
 			b=stack.pop()
 			stack.append(a*b)
+		elif i=='>':
+			a=stack.pop()
+			b=stack.pop()
+			stack.append(min(1-b+a,1))
+		elif i=='~':
+			a=stack.pop()
+			b=stack.pop()
+			stack.append((1-a+b)*(1-b+a))
 		else:
 			a=stack.pop()
 			b=stack.pop()
@@ -102,20 +121,69 @@ class Logic:
 				
 		#print post
 		return evaluate(post)
-			
-				
+						
 		
+cs=["p^q","(pvq)v(!p^!q)","p^!q","p","p^q^r","p~q","!(p~q)>(p^q)"]
 
-a=Logic("p^q")
-b=Logic("(pvq)v(!p^!q)")
-c=Logic("p^!q")
-#d=Logic("pv!q")
+
+max_var=0
+for i in cs:
+	a=Logic(i)
+	max_var=max(len(a.var),max_var)
+
+
 print "Evaluation: "
 for i in sent:
 	print i
 	for j in sent[i]:
 		print j
 	print
+
+sent={}
+
+class Normalise:
+	def __init__(self,x):
+		self.y=x
+		self.var=set()
+		self.l=0
+		self.calc_var(x)
+		self.format(x)
+	def calc_var(self,x):
+		for i in x:
+			j=ord(i)
+			if j>=97 and j<=122 and i!='v':
+				self.var.add(i)
+	def format(self,x):
+		x="("+x
+		self.l=len(self.var)
+		k=97
+		for i in self.var:
+			x=x.replace(i,chr(k))
+			k=k+1
+		x=x+")"
+		self.convert(x)
+
+	def convert(self,x):
+		if self.l!=max_var:
+			#print self.l,max_var
+			f=self.l
+			d=max_var-f
+			k=97+f
+			while f<max_var:
+				x=x+"^("+chr(k)+"v!"+chr(k)+")"
+				k=k+1
+				f=f+1
+		self.y=x
+
+for i in range(len(cs)):
+	a=Normalise(cs[i])
+	dict_sent[a.y]=cs[i]
+	cs[i]=a.y
+
+#print dict_sent
+
+for i in cs:
+	a=Logic(i)		
 
 class Parameter:
 	def __init__(self):
@@ -132,7 +200,7 @@ class Parameter:
 					ans=False
 					break
 			if ans:
-				self.tautology.append(i)
+				self.tautology.append(dict_sent[i])
 		
 	def check_contradiction(self):
 		for i in sent:
@@ -142,10 +210,15 @@ class Parameter:
 					ans=False
 					break
 			if ans:
-				self.contradiction.append(i)
+				self.contradiction.append(dict_sent[i])
 	def check_contingency(self):
 		for i in sent:
-			if i not in self.tautology and i not in self.contradiction:
+			i=dict_sent[i]
+			if i in self.tautology:
+				continue
+			elif  i in self.contradiction:
+				continue
+			else:
 				self.contingency.append(i)
 
 	def check_equivalence(self):
@@ -161,7 +234,7 @@ class Parameter:
 							ans=False
 							break
 					if ans:
-						self.equivalence.append((i,j))
+						self.equivalence.append((dict_sent[i],dict_sent[j]))
 	def check_entailment(self):
 		for i in sent:
 			for j in sent:	
@@ -172,7 +245,7 @@ class Parameter:
 							ans=False
 							break
 					if ans:
-						self.entailment.append((i,j))
+						self.entailment.append((dict_sent[i],dict_sent[j]))
 	def check_consistency(self):
 		key=sent.keys()
 		k=0
